@@ -1,0 +1,31 @@
+name: GE AI Bot
+
+on:
+  issues:
+    types: [opened, labeled]
+  issue_comment:
+    types: [created]
+  pull_request:
+    types: [opened, synchronize, labeled]
+
+jobs:
+  bot:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. 检出 Action 源码到指定路径 (例如 .github/actions/ge-bot)
+      - name: Checkout Action
+        uses: actions/checkout@v4
+        with:
+          repository: zheeeng/GalaceanEffectsAIDeveloper # 您的 Action 仓库
+          token: ${{ secrets.PRIVATE_ACTION_TOKEN }}     # 必须是 PAT
+          path: .github/actions/ge-bot
+
+      # 2. 检出当前仓库代码
+      - name: Checkout Current Repo
+        uses: actions/checkout@v4
+
+      # 3. 使用本地路径引用 Action
+      - name: Run GE AI Bot
+        uses: ./.github/actions/ge-bot
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
