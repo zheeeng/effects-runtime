@@ -16,11 +16,12 @@ jobs:
       - name: Checkout Current Repo
         uses: actions/checkout@v4
 
-      # 2. 然后检出 Action 源码到指定子目录 (例如 .github/actions/ge-bot)
+      # 2. 然后检出 Action 源码到指定子目录
       - name: Checkout Action
         uses: actions/checkout@v4
         with:
           repository: zheeeng/GalaceanEffectsAIDeveloper # 您的 Action 仓库
+          ref: release                                   # ⚠️ 必须指定 release 分支 (包含构建产物)
           token: ${{ secrets.PRIVATE_ACTION_TOKEN }}     # 必须是 PAT
           path: .github/actions/ge-bot
 
