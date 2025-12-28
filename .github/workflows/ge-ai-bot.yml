@@ -25,8 +25,18 @@ jobs:
           token: ${{ secrets.PRIVATE_ACTION_TOKEN }}     # 必须是 PAT
           path: .github/actions/ge-bot
 
-      # 3. 使用本地路径引用 Action
+      # 3. 安装 Claude Code CLI
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+        # 如果使用 Mock AI (ai-mock: 'true')，可以跳过此步骤
+
+      # 4. 使用本地路径引用 Action
       - name: Run GE AI Bot
         uses: ./.github/actions/ge-bot
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_MODEL: 'opus'  # 可选，默认为 opus
+          ANTHROPIC_TIMEOUT: '1800'  # 可选，默认 30 分钟
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          ai-mock: 'false' # 设置为 true 开启模拟模式（不使用 Claude Code）
