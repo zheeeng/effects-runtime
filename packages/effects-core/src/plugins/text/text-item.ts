@@ -10,6 +10,7 @@ import { TextLayout } from './text-layout';
 import { TextStyle } from './text-style';
 import type { ITextComponent } from './text-component-base';
 import { TextComponentBase } from './text-component-base';
+import { renderFancyEffects } from './fancy-text-effects'; // Import the new function
 
 export const DEFAULT_FONTS = [
   'serif',
@@ -368,6 +369,8 @@ export class TextComponent extends MaskableGraphic implements ITextComponent {
         context.font = style.fontDesc;
       }
 
+      // Setup shadow and outline BEFORE applying fancy effects
+      // This allows fancy effects to potentially override or complement these settings.
       if (style.hasShadow) {
         this.setupShadow();
       }
@@ -425,15 +428,41 @@ export class TextComponent extends MaskableGraphic implements ITextComponent {
         const x = layout.getOffsetX(style, charInfo.width);
 
         charInfo.chars.forEach((str, i) => {
-          if (style.isOutlined) {
-            context.strokeText(str, x + charInfo.charOffsetX[i], charInfo.y);
+          // Render fancy effects first, if any exist.
+          // This approach assumes fancy effects are drawn ON TOP of base text/shadow/outline.
+          // If fancy effects should be drawn UNDERNEATH, this logic would need adjustment.
+          if (style.fancyEffects && style.fancyEffects.length > 0) {
+            renderFancyEffects(context, str, x + charInfo.charOffsetX[i], charInfo.y, {
+              font: style.fontDesc,
+              fillStyle: context.fillStyle as string, // Pass current fillStyle
+              strokeStyle: context.strokeStyle as string, // Pass current strokeStyle
+              lineWidth: style.outlineWidth,
+              shadowColor: context.shadowColor,
+              shadowBlur: context.shadowBlur,
+              shadowOffsetX: context.shadowOffsetX,
+              shadowOffsetY: context.shadowOffsetY,
+            }, style.fancyEffects);
+          } else {
+            // Fallback to existing rendering if no fancy effects
+            if (style.isOutlined) {
+              context.strokeText(str, x + charInfo.charOffsetX[i], charInfo.y);
+            }
+            context.fillText(str, x + charInfo.charOffsetX[i], charInfo.y);
           }
-          context.fillText(str, x + charInfo.charOffsetX[i], charInfo.y);
         });
       });
 
+      // Reset shadow properties to avoid affecting subsequent rendering (if any)
       if (style.hasShadow) {
         context.shadowColor = 'transparent';
+        context.shadowBlur = 0;
+        context.shadowOffsetX = 0;
+        context.shadowOffsetY = 0;
+      }
+      // Reset outline properties if they were set
+      if (style.isOutlined) {
+          context.strokeStyle = 'transparent';
+          context.lineWidth = 0;
       }
     });
 
