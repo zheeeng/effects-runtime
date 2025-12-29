@@ -9,18 +9,25 @@ on:
     types: [opened, synchronize, labeled]
 
 jobs:
-  ai-bot:
+  bot:
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
-      pull-requests: write
-      contents: write  # 如果需要让 Bot 提 PR 或直接修复代码，需要此权限
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      # 1. 首先检出当前仓库代码
+      - name: Checkout Current Repo
+        uses: actions/checkout@v4
 
-      - name: Run GE AI Developer
-        uses: zheeeng/GalaceanEffectsAIDeveloper@release # ⚠️ 注意：指向 release 分支，而非 main
+      # 2. 然后检出 Action 源码到指定子目录
+      - name: Checkout Action
+        uses: actions/checkout@v4
+        with:
+          repository: zheeeng/GalaceanEffectsAIDeveloper # 您的 Action 仓库
+          ref: release                                   # ⚠️ 必须指定 release 分支 (包含构建产物)
+          token: ${{ secrets.PRIVATE_ACTION_TOKEN }}     # 必须是 PAT
+          path: .github/actions/ge-bot
+
+      # 3. 使用本地路径引用 Action
+      - name: Run GE AI Bot
+        uses: ./.github/actions/ge-bot
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
